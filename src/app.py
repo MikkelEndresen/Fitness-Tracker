@@ -24,6 +24,8 @@ async def startup_event():
     global db
     db = client.get_database("sample_mflix")
 
+    print("Server started")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -31,11 +33,15 @@ async def shutdown_event():
     # Shutdown DB
 
     global db
-    if db:
-        await db.client.close()  # Close the MongoDB client connection
+    if db is not None:
+        db.client.close()  # Close the MongoDB client connection
         print("MongoDB client connection closed.")
 
-    
+
+@app.post("/message/")
+async def recieve_message(message: str):
+    return {"message": "This fucking worked: " + message}
+
 
 # Define your FastAPI routes and methods below
 @app.get("/")
