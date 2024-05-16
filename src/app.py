@@ -6,6 +6,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import json
 
+from src.schema import ExerciseModel
+
 app = FastAPI()
 
 # get config file
@@ -22,7 +24,7 @@ async def startup_event():
 
     client = AsyncIOMotorClient(config['testcluster'])
     global db
-    db = client.get_database("sample_mflix")
+    db = client.get_database('GymBro')
 
     print("Server started")
 
@@ -40,7 +42,17 @@ async def shutdown_event():
 
 @app.post("/message/")
 async def recieve_message(message: str):
-    return {"message": "This fucking worked: " + message}
+
+    return {"message": message}
+
+@app.post("/test_db/")
+async def test_db(test: ExerciseModel):
+
+    global db
+    exercise_collection = db["exercise"]
+    await exercise_collection.insert_one(test.dict())
+
+    return {"message": "success"}
 
 
 # Define your FastAPI routes and methods below
