@@ -1,4 +1,4 @@
 /myenv
 config.json
 __pycache__
-src/secrets.py
+src/keys.py
