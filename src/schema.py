@@ -34,8 +34,10 @@ class WorkoutModel(BaseModel):
     bro_id: str
     exercises: List[ExerciseModel]
 
-
-
 class User(BaseModel):
     username: str
     password: str
+
+
+class ChatMessage(BaseModel):
+    chat_message: str

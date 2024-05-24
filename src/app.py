@@ -8,7 +8,7 @@ import json
 import jwt
 import bcrypt
 
-from src.schema import ExerciseModel, User
+from src.schema import ExerciseModel, User, ChatMessage
 from src.utils import verify_token
 
 
@@ -75,9 +75,14 @@ async def login(user: User):
 
 # Protected route
 @app.get("/protected")
-def protected(token: str = Depends(verify_token)):
+async def protected(token: str = Depends(verify_token)):
     return {"message": "This is a protected route, but you are in the very special club my friend"}
 
+@app.post("/basic")
+async def basic(msg: ChatMessage, token: str = Depends(verify_token)):
+    # send msg to LLM
+
+    return {"message": "Mystical AI"}
 
 @app.post("/message/")
 async def recieve_message(message: str):
