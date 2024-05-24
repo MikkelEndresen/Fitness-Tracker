@@ -1,12 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 import os
 import json
+import jwt
+import bcrypt
 
-from src.schema import ExerciseModel
+from src.schema import ExerciseModel, User
+from src.utils import verify_token
+
+
+# JWT setup #TODO: hide this
+SECRET_KEY = "banana-apple-smoothie"
+ALGORITHM = "HS256"
 
 app = FastAPI()
 
@@ -38,6 +46,37 @@ async def shutdown_event():
     if db is not None:
         db.client.close()  # Close the MongoDB client connection
         print("MongoDB client connection closed.")
+
+# User registration
+@app.post("/register")
+async def register(user: User):
+    hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())
+    
+    global db
+    user_collection = db["users"]
+    await user_collection.insert_one({"username": user.username, "password": hashed_password})
+
+    return {"message": "User registered successfully"}
+
+# User login
+@app.post("/login")
+async def login(user: User):
+    
+    global db
+    user_collection = db["users"]
+    db_user = await user_collection.find_one({"username": user.username})
+
+    if db_user and bcrypt.checkpw(user.password.encode("utf-8"), db_user["password"]):
+        token = jwt.encode({"username": user.username}, SECRET_KEY, algorithm=ALGORITHM)
+        return {"token": token}
+    else:
+        return {"message": "Invalid username or password"}
+
+
+# Protected route
+@app.get("/protected")
+def protected(token: str = Depends(verify_token)):
+    return {"message": "This is a protected route, but you are in the very special club my friend"}
 
 
 @app.post("/message/")

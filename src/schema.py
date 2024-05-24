@@ -36,3 +36,6 @@ class WorkoutModel(BaseModel):
 
 
 
+class User(BaseModel):
+    username: str
+    password: str
