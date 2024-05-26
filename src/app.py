@@ -8,15 +8,17 @@ import json
 import jwt
 import bcrypt
 
-from src.schema import ExerciseModel, User, ChatMessage
-from src.utils import verify_token
+from .schema import ExerciseModel, User, ChatMessage, WorkoutModel,  DbExerciseModel
+from .utils import verify_token, token_to_user
+from .llm import prompt_model
 
+from datetime import date
 
 # JWT setup #TODO: hide this
 SECRET_KEY = "banana-apple-smoothie"
 ALGORITHM = "HS256"
 
-app = FastAPI()
+app = FastAPI() # uvicorn app:app --reload
 
 # get config file
 config_file = open("config/config.json", "r")
@@ -78,11 +80,42 @@ async def login(user: User):
 async def protected(token: str = Depends(verify_token)):
     return {"message": "This is a protected route, but you are in the very special club my friend"}
 
-@app.post("/basic")
-async def basic(msg: ChatMessage, token: str = Depends(verify_token)):
-    # send msg to LLM
 
-    return {"message": "Mystical AI"}
+@app.post("/record_exercise")
+async def basic(msg: ChatMessage, token: str = Depends(verify_token)):
+    
+    result = prompt_model(msg)
+
+    # Check for current workout
+    global db
+    workout_collection = db['workouts']
+
+    workout = await workout_collection.find_one({'dateField': {'$exists': True, '$eq': str(date.today())}})
+
+    if workout is None:
+        user_collection = db['users']
+        user = await user_collection.find_one({"username": token_to_user(token)})
+
+        workout = WorkoutModel(user = user, date = str(date.today())) # TODO: encrypt user info!
+        workout_collection.insert_one(workout.dict())
+
+    print('-'*80)
+    print(result)
+    print('-'*80)
+    exercise = ExerciseModel(name=result['name'], sets=result['sets'], reps=result['reps'], weight=result['weight'], unit=result['unit'])
+
+ 
+    exercise_dict = dict(exercise)
+    exercise_dict['workout'] = workout
+    db_exercise =  DbExerciseModel(**exercise_dict)
+   # db_exercise.update(workout=workout)
+    
+    exercise_collection = db['exercise']
+
+    await exercise_collection.insert_one(db_exercise.dict())
+
+    return {"message": "Fucking success that lad", "db item": db_exercise}
+
 
 @app.post("/message/")
 async def recieve_message(message: str):
