@@ -3,12 +3,12 @@ from src.keys import getHeaders
 from langchain_huggingface import HuggingFacePipeline
 
 from pydantic import BaseModel
+from src.schema import ExerciseModel
 
 
 ###
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
 
 import json
 ###
@@ -29,58 +29,49 @@ def huggingface_example():
     print(output)
 from langchain_community.llms import Ollama
 
-def ollama_phi3(query):
+def ollama_phi3():
     """
     Description:
-        - Prompts phi3 (temperature=0.0)
+        - Creates phi3 ollama model
+        - Parameters:
+            - model = 'phi3'
+            - temperature = 0.0
     Setup: 
         - (If not already done) Ollama pull phi3
     Return:
-        - Returns the LLM response
+        - Returns the model
     """
     llm = Ollama(model='phi3', temperature=0.0) # temp defaults to 0.8
-    result = llm.invoke(query)
 
-    return result   
+    return llm
 
-if __name__ == "__main__":
+def prompt_model(query):
 
-     
-    model = Ollama(model='phi3', temperature=0.0)
-
-
-    class Pipeline(BaseModel):
-        parameter: str = Field(description="Name of analytes, e.g. HBA1", max_length=20)
-        value: str = Field(description="Value of analytes, e.g. 10.2", max_length=10)
-        unit: str = Field(description="Unit of the value is measured in, e.g. mmol/L", max_length=10)
-
-
-    # And a query intented to prompt a language model to populate the data structure.
-    query = f"""
-            From each of the following dictionaries value extract the paramater, value, and unit of the analyte.
-            Dictionaries: [{{"Total Testosterone": "Total Testosterone (Siemens) 39.2 nmol/L (8.3-29)"}}, {{"Iron": "Iron (10-30) umol/L 40 33 21 27"}}]
-    """
+    model = ollama_phi3()
 
     # Set up a parser + inject instructions into the prompt template.
-    parser = JsonOutputParser(pydantic_object=Pipeline)
+    parser = JsonOutputParser(pydantic_object=ExerciseModel)
 
     prompt = PromptTemplate(
-        template="Answer the user query.\n{format_instructions}\n{query}\n",
+        template="Return the name of the exercise, number of reps, number of sets, and the weight on the format specified.\n{format_instructions}\n{query}\n",
         input_variables=["query"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
     )
 
     chain = prompt | model | parser
 
+    #print(f"This is the chain: {chain}")
+
     result = chain.invoke({"query": query})
 
-    print(f"All: {result}\n")
+    return result
 
-    print(f"Result one: {result[0]}")
-    print(f"Result one, parameter: {result[0]['parameter']}")
-    print(f"Result one, value: {result[0]['value']}")
-    print(f"Result one, unit: {result[0]['unit']}\n")
 
-    print(f"Result two: {result[1]}")
-    print(f"Result two, parameter: {result[1]['parameter']}")
-    print(f"Result two, value: {result[1]['value']}")
+if __name__ == "__main__":
+
+    #test_query = "Bench press for 3 sets, 8 reps each time with 60kg"
+    test_query = "Squats 10 reps for 3 sets with 100kg "
+
+    result = prompt_model(test_query)
+
+    print(result)
