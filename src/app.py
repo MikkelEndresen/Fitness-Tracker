@@ -95,8 +95,8 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token)):
     if workout is None:
         user_collection = db['users']
         user = await user_collection.find_one({"username": token_to_user(token)})
-
-        workout = WorkoutModel(user = user, date = str(date.today())) # TODO: encrypt user info!
+        
+        workout = WorkoutModel(user = user, date = str(date.today()))
         workout_collection.insert_one(workout.dict())
 
     print('-'*80)
@@ -108,8 +108,7 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token)):
     exercise_dict = dict(exercise)
     exercise_dict['workout'] = workout
     db_exercise =  DbExerciseModel(**exercise_dict)
-   # db_exercise.update(workout=workout)
-    
+
     exercise_collection = db['exercise']
 
     await exercise_collection.insert_one(db_exercise.dict())
