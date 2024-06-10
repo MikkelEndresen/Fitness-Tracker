@@ -3,7 +3,7 @@ from src.keys import getHeaders
 from langchain_huggingface import HuggingFacePipeline
 
 from pydantic import BaseModel
-from src.schema import ExerciseModel
+from .schemas import ExerciseModel
 
 
 ###

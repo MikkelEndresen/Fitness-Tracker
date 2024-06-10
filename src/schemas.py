@@ -9,10 +9,28 @@ from datetime import date
 
 
 
+# class UserBase(BaseModel):
+#     email: str
 
 
-class User(BaseModel):
+# class UserCreate(UserBase):
+#     password: str
+
+
+# class User(UserBase):
+#     id: int
+#     is_active: bool
+
+#     class Config:
+#         orm_mode = True
+
+class UserBase(BaseModel):
     username: str
+
+class UserCreate(UserBase):
+    password: str
+
+class UserLogin(UserBase):
     password: str
 
 
@@ -22,7 +40,7 @@ class ChatMessage(BaseModel):
 
 # Workout
 class WorkoutModel(BaseModel):
-    user: User
+    user: UserBase
     date: str
 
 # Exercise
@@ -35,6 +53,16 @@ class ExerciseModel(BaseModel):
 
 class DbExerciseModel(ExerciseModel):
     workout: Optional[WorkoutModel] = None
+
+"""
+class Reps(BaseModel):
+    reps: List[int]
+
+class Sets(BaseModel):
+    sets: List[Reps]
+    num_sets: len(sets)
+
+"""
 
 
 """
