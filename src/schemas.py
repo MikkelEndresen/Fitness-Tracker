@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
-from datetime import date
-
+from datetime import datetime, date
+from enum import Enum
 
 
 # class UserBase(BaseModel):
@@ -27,6 +27,9 @@ from datetime import date
 class UserBase(BaseModel):
     username: str
 
+    class Config:
+        orm_mode = True
+
 class UserCreate(UserBase):
     password: str
 
@@ -37,32 +40,43 @@ class UserLogin(UserBase):
 class ChatMessage(BaseModel):
     chat_message: str
 
+# Unit of measurement
+class UnitEnum(str, Enum):
+    kg = "kg"
+    pounds = "lb"
 
-# Workout
-class WorkoutModel(BaseModel):
-    user: UserBase
-    date: str
 
-# Exercise
-class ExerciseModel(BaseModel):
+class ExerciseBase(BaseModel):
     name: str = Field(description="Name of the exercise")
+
+class ExerciseCreate(ExerciseBase):
+    pass
+
+class Exercise(ExerciseBase):
     sets: int = Field(description="Number of sets performed")
     reps: int = Field(description="Number of reps performed")
     weight: float = Field(description="Weight used for the exercise, e.g. 60kg = 60")
-    unit: str = Field(description="unit of measurement for the wight, e.g. 60kg = kg")
+    unit: UnitEnum = Field(description="Either kg or lb")
 
-class DbExerciseModel(ExerciseModel):
-    workout: Optional[WorkoutModel] = None
+    class Config:
+        orm_mode: True
 
-"""
-class Reps(BaseModel):
-    reps: List[int]
 
-class Sets(BaseModel):
-    sets: List[Reps]
-    num_sets: len(sets)
+class WorkoutBase(BaseModel):
+    user: UserBase
 
-"""
+class WorkoutCreate(WorkoutBase):
+    exercises: List[ExerciseCreate]
+    date: date
+
+class Workout(WorkoutBase):
+    id: int
+    exercises: List[Exercise] = []
+
+    class Config:
+        orm_mode: True
+
+
 
 
 """

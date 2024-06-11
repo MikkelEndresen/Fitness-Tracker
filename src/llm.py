@@ -3,7 +3,7 @@ from src.keys import getHeaders
 from langchain_huggingface import HuggingFacePipeline
 
 from pydantic import BaseModel
-from .schemas import ExerciseModel
+from .schemas import Exercise
 
 
 ###
@@ -50,7 +50,7 @@ def prompt_model(query):
     model = ollama_phi3()
 
     # Set up a parser + inject instructions into the prompt template.
-    parser = JsonOutputParser(pydantic_object=ExerciseModel)
+    parser = JsonOutputParser(pydantic_object=Exercise)
 
     prompt = PromptTemplate(
         template="Return the name of the exercise, number of reps, number of sets, and the weight on the format specified.\n{format_instructions}\n{query}\n",

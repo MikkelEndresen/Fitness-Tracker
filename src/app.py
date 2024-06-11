@@ -8,7 +8,7 @@ import json
 import jwt
 import bcrypt
 
-from .schemas import ExerciseModel, ChatMessage, WorkoutModel,  DbExerciseModel
+from .schemas import ExerciseCreate, Exercise, ChatMessage, WorkoutCreate
 from .utils import verify_token, token_to_user
 from .llm import prompt_model
 
@@ -95,38 +95,46 @@ async def protected(token: str = Depends(verify_token)):
 
 
 @app.post("/record_exercise")
-async def basic(msg: ChatMessage, token: str = Depends(verify_token)):
+async def basic(msg: ChatMessage, token: str = Depends(verify_token), db: Session = Depends(get_db)):
     
+    print("Accepted to /record_exercise")
+
     result = prompt_model(msg)
 
     # Check for current workout
-    global db
-    workout_collection = db['workouts']
+    # global db
+    # workout_collection = db['workouts']
 
-    workout = await workout_collection.find_one({'dateField': {'$exists': True, '$eq': str(date.today())}})
+    #workout = await workout_collection.find_one({'dateField': {'$exists': True, '$eq': str(date.today())}})
+    workout = crud.get_workout_by_date(db, date.today())
 
     if workout is None:
-        user_collection = db['users']
-        user = await user_collection.find_one({"username": token_to_user(token)})
-        
-        workout = WorkoutModel(user = user, date = str(date.today()))
-        workout_collection.insert_one(workout.dict())
+        #user_collection = db['users']
+        #user = await user_collection.find_one({"username": token_to_user(token)})
+        user = crud.get_user_by_username(token_to_user(token))
+
+        workout = WorkoutCreate(user = user.id, date = str(date.today()), exercises = [])
+        workout_db = crud.create_workout(get_db, workout)
+        #workout_collection.insert_one(workout.dict())
 
     print('-'*80)
     print(result)
     print('-'*80)
-    exercise = ExerciseModel(name=result['name'], sets=result['sets'], reps=result['reps'], weight=result['weight'], unit=result['unit'])
+    exercise = Exercise(name=result['name'], sets=result['sets'], reps=result['reps'], weight=result['weight'], unit=result['unit'])
+    exercise_db = crud.create_exercise(db, exercise)
+    # exercise_dict = dict(exercise)
+    # exercise_dict['workout'] = workout
+    # db_exercise =  DbExerciseModel(**exercise_dict)
 
- 
-    exercise_dict = dict(exercise)
-    exercise_dict['workout'] = workout
-    db_exercise =  DbExerciseModel(**exercise_dict)
+    workout_db.exercises.append(exercise_db)
+    # Commit the changes to the database
+    db.commit()
 
-    exercise_collection = db['exercise']
+    #exercise_collection = db['exercise']
 
-    await exercise_collection.insert_one(db_exercise.dict())
+    #await exercise_collection.insert_one(db_exercise.dict())
 
-    return {"message": "Fucking success that lad", "db item": db_exercise}
+    return {"message": "Fucking success that lad", "db item": exercise_db}
 
 
 @app.post("/message/")
@@ -134,14 +142,14 @@ async def recieve_message(message: str):
 
     return {"message": message}
 
-@app.post("/test_db/")
-async def test_db(test: ExerciseModel):
+# @app.post("/test_db/")
+# async def test_db(test: ExerciseModel):
 
-    global db
-    exercise_collection = db["exercise"]
-    await exercise_collection.insert_one(test.dict())
+#     global db
+#     exercise_collection = db["exercise"]
+#     await exercise_collection.insert_one(test.dict())
 
-    return {"message": "success"}
+#     return {"message": "success"}
 
 
 # Define your FastAPI routes and methods below

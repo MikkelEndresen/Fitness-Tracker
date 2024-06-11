@@ -4,7 +4,7 @@ from . import models
 
 def getSession():
     # Define database engine
-    engine = create_engine('postgresql://postgres:Snig#eRdoodle456hah@localhost:5433/gymbro')
+    engine = create_engine('postgresql://postgres:Snig#eRdoodle456hah@localhost:5433/testex')
 
     # Define Base class for declarative models
     Base = declarative_base()
