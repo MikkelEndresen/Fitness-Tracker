@@ -44,6 +44,7 @@ class ChatMessage(BaseModel):
 class UnitEnum(str, Enum):
     kg = "kg"
     pounds = "lb"
+    default = ""
 
 
 class ExerciseBase(BaseModel):
@@ -53,17 +54,17 @@ class ExerciseCreate(ExerciseBase):
     pass
 
 class Exercise(ExerciseBase):
-    sets: int = Field(description="Number of sets performed")
-    reps: int = Field(description="Number of reps performed")
-    weight: float = Field(description="Weight used for the exercise, e.g. 60kg = 60")
-    unit: UnitEnum = Field(description="Either kg or lb")
+    sets: int = Field(default = 0, description="Number of sets performed")
+    reps: int = Field(default = 0, description="Number of reps performed")
+    weight: float = Field(default = 0.0, description="Weight used for the exercise, e.g. 60kg = 60")
+    unit: UnitEnum = Field(default = "", description="Either kg or lb")
 
     class Config:
         orm_mode: True
 
 
 class WorkoutBase(BaseModel):
-    user: UserBase
+    user_id: int
 
 class WorkoutCreate(WorkoutBase):
     exercises: List[ExerciseCreate]
@@ -72,6 +73,7 @@ class WorkoutCreate(WorkoutBase):
 class Workout(WorkoutBase):
     id: int
     exercises: List[Exercise] = []
+    date: date
 
     class Config:
         orm_mode: True

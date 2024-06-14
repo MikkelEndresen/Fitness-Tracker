@@ -8,7 +8,7 @@ import json
 import jwt
 import bcrypt
 
-from .schemas import ExerciseCreate, Exercise, ChatMessage, WorkoutCreate
+from .schemas import ExerciseCreate, Exercise, ChatMessage, WorkoutCreate, UserBase
 from .utils import verify_token, token_to_user
 from .llm import prompt_model
 
@@ -106,15 +106,14 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token), db: Sessio
     # workout_collection = db['workouts']
 
     #workout = await workout_collection.find_one({'dateField': {'$exists': True, '$eq': str(date.today())}})
-    workout = crud.get_workout_by_date(db, date.today())
-
-    if workout is None:
+    workout_db = crud.get_workout_by_date(db, date.today())
+    if workout_db is None:
         #user_collection = db['users']
         #user = await user_collection.find_one({"username": token_to_user(token)})
-        user = crud.get_user_by_username(token_to_user(token))
+        user = crud.get_user_by_username(db, token_to_user(token))
 
-        workout = WorkoutCreate(user = user.id, date = str(date.today()), exercises = [])
-        workout_db = crud.create_workout(get_db, workout)
+        workout = WorkoutCreate(user_id = user.user_id, date = str(date.today()), exercises = [])
+        workout_db = crud.create_workout(db, workout)
         #workout_collection.insert_one(workout.dict())
 
     print('-'*80)
@@ -126,15 +125,17 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token), db: Sessio
     # exercise_dict['workout'] = workout
     # db_exercise =  DbExerciseModel(**exercise_dict)
 
-    workout_db.exercises.append(exercise_db)
+    # workout_db.exercises.append(exercise_db)
+    crud.add_exercise(db, workout_db, exercise_db)
+
     # Commit the changes to the database
-    db.commit()
+    #db.commit()
 
     #exercise_collection = db['exercise']
 
     #await exercise_collection.insert_one(db_exercise.dict())
 
-    return {"message": "Fucking success that lad", "db item": exercise_db}
+    return {"message": "Fucking success that lad", "exercise": result}
 
 
 @app.post("/message/")

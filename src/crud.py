@@ -27,6 +27,15 @@ def create_exercise(db: Session, exercise: schemas.ExerciseCreate):
     db.refresh(db_exercise)
     return db_exercise
 
+def add_exercise(db: Session, workout_db: models.Workout, exercise_db: models.Exercise):
+    workout_db.exercises.append(exercise_db)
+    db.commit()
+        
+    db.refresh(workout_db)
+        
+    return workout_db
+
+
 def create_workout(db: Session, workout: schemas.WorkoutCreate):
     db_workout = models.Workout(**workout.model_dump())
     db.add(db_workout)
@@ -35,4 +44,5 @@ def create_workout(db: Session, workout: schemas.WorkoutCreate):
     return db_workout
 
 def get_workout_by_date(db: Session, date_in: date):
+    print(db.query(models.Workout).filter(models.Workout.date == date_in).first().exercises)
     return db.query(models.Workout).filter(models.Workout.date == date_in).first()
