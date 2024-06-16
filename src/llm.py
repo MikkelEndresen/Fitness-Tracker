@@ -45,6 +45,7 @@ def ollama_phi3():
 
     return llm
 
+import time
 def prompt_model(query):
 
     model = ollama_phi3()
@@ -60,9 +61,15 @@ def prompt_model(query):
 
     chain = prompt | model | parser
 
-    #print(f"This is the chain: {chain}")
-
     result = chain.invoke({"query": query})
+    
+    """
+    ## Time info ollama:
+    Initialising model time: 0.011039018630981445
+    Chain assembly 0.01017308235168457
+    Prompt time: 11.883311748504639
+    Total: 11.904523849487305
+    """
 
     return result
 
