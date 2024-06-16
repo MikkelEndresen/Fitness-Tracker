@@ -13,7 +13,7 @@ from .utils import verify_token, token_to_user
 from .llm import prompt_model
 
 from .db import getSession
-from . import crud, schemas, utils, llm
+from . import crud, schemas, utils, llm, keys
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -23,8 +23,7 @@ from sqlalchemy.orm import Session
 # uvicorn src.app:app --reload
 
 # JWT setup #TODO: hide this
-SECRET_KEY = "banana-apple-smoothie"
-ALGORITHM = "HS256"
+
 
 app = FastAPI() # uvicorn app:app --reload
 
@@ -84,7 +83,7 @@ async def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     if not db_user or not bcrypt.checkpw(user.password.encode("utf-8"), hashed_password_bytes):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     # Create token and return it
-    token = jwt.encode({"username": db_user.username}, SECRET_KEY, algorithm=ALGORITHM)
+    token = jwt.encode({"username": db_user.username}, keys.SECRET_KEY, algorithm=keys.ALGORITHM)
     return {"token": token}
 
 
@@ -113,6 +112,7 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token), db: Sessio
     print('-'*80)
     print(result)
     print('-'*80)
+
     exercise = Exercise(name=result['name'], sets=result['sets'], reps=result['reps'], weight=result['weight'], unit=result['unit'])
     exercise_db = crud.create_exercise(db, exercise)
 
@@ -131,15 +131,6 @@ async def goggins(msg: str, token: str = Depends(verify_token), db: Session = De
 async def recieve_message(message: str):
 
     return {"message": message}
-
-# @app.post("/test_db/")
-# async def test_db(test: ExerciseModel):
-
-#     global db
-#     exercise_collection = db["exercise"]
-#     await exercise_collection.insert_one(test.dict())
-
-#     return {"message": "success"}
 
 
 # Define your FastAPI routes and methods below
