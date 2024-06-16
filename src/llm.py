@@ -74,6 +74,22 @@ def prompt_model(query):
     return result
 
 
+def goggins(query):
+
+    model = ollama_phi3()
+
+    prompt = PromptTemplate(
+        template = "Reply as if you are David Goggins with excitement and profanity. Please include talking about the inner bitch or being a bitch, etc. when appropriate", 
+        input_variables = ["query"]
+    )
+
+    chain = prompt | model
+
+    result = chain.invoke({"query": query})
+
+    return result
+
+
 if __name__ == "__main__":
 
     #test_query = "Bench press for 3 sets, 8 reps each time with 60kg"

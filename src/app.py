@@ -13,7 +13,7 @@ from .utils import verify_token, token_to_user
 from .llm import prompt_model
 
 from .db import getSession
-from . import crud, schemas, utils
+from . import crud, schemas, utils, llm
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -119,6 +119,12 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token), db: Sessio
     crud.add_exercise(db, workout_db, exercise_db)
 
     return {"message": "Fucking success that lad", "exercise": result}
+
+@app.post("/goggins")
+async def goggins(msg: str, token: str = Depends(verify_token), db: Session = Depends(get_db)):
+    result = llm.goggins(msg)
+
+    return {"goggins": result}
 
 
 @app.post("/message/")
