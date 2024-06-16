@@ -44,5 +44,4 @@ def create_workout(db: Session, workout: schemas.WorkoutCreate):
     return db_workout
 
 def get_workout_by_date(db: Session, date_in: date):
-    print(db.query(models.Workout).filter(models.Workout.date == date_in).first().exercises)
     return db.query(models.Workout).filter(models.Workout.date == date_in).first()

@@ -13,7 +13,7 @@ from .utils import verify_token, token_to_user
 from .llm import prompt_model
 
 from .db import getSession
-from . import crud, schemas
+from . import crud, schemas, utils
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -100,40 +100,23 @@ async def basic(msg: ChatMessage, token: str = Depends(verify_token), db: Sessio
     print("Accepted to /record_exercise")
 
     result = prompt_model(msg)
+    #result = {'name': 'Cossack squat', 'sets': 3, 'reps': 10, 'weight': 10.0, 'unit': 'kg'} # for testing
+    utils.store_query(msg.chat_message, result)
 
-    # Check for current workout
-    # global db
-    # workout_collection = db['workouts']
-
-    #workout = await workout_collection.find_one({'dateField': {'$exists': True, '$eq': str(date.today())}})
     workout_db = crud.get_workout_by_date(db, date.today())
     if workout_db is None:
-        #user_collection = db['users']
-        #user = await user_collection.find_one({"username": token_to_user(token)})
         user = crud.get_user_by_username(db, token_to_user(token))
 
         workout = WorkoutCreate(user_id = user.user_id, date = str(date.today()), exercises = [])
         workout_db = crud.create_workout(db, workout)
-        #workout_collection.insert_one(workout.dict())
 
     print('-'*80)
     print(result)
     print('-'*80)
     exercise = Exercise(name=result['name'], sets=result['sets'], reps=result['reps'], weight=result['weight'], unit=result['unit'])
     exercise_db = crud.create_exercise(db, exercise)
-    # exercise_dict = dict(exercise)
-    # exercise_dict['workout'] = workout
-    # db_exercise =  DbExerciseModel(**exercise_dict)
 
-    # workout_db.exercises.append(exercise_db)
     crud.add_exercise(db, workout_db, exercise_db)
-
-    # Commit the changes to the database
-    #db.commit()
-
-    #exercise_collection = db['exercise']
-
-    #await exercise_collection.insert_one(db_exercise.dict())
 
     return {"message": "Fucking success that lad", "exercise": result}
 
