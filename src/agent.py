@@ -1,6 +1,4 @@
 
-
-
 # Workflow suggestion
     # Does it contain information about what the bro just did?
         # If yes

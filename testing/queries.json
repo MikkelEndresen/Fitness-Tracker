@@ -1,0 +1,11 @@
+
+[
+    {
+        "query": "Bench press for 3 sets, 8 reps each time with 60kg",
+        "label": "simplequery1" 
+    },
+    {
+        "query": "Bench press - 60kg x12 3 sets",
+        "label": "simplequery2" 
+    }
+]

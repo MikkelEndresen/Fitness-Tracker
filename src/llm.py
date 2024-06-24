@@ -27,6 +27,7 @@ def huggingface_example():
         "inputs": "Who is the smartest person in the world?",
     })
     print(output)
+
 from langchain_community.llms import Ollama
 
 def ollama_phi3():
